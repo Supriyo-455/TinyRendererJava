@@ -69,4 +69,13 @@ public class Color {
 
         return (0xFF << 24) | (r << 16) | (g << 8) | b;
     }
+
+    public static int generateRandomColorRGBValue() {
+        int color = new Color(
+                (float) Math.random(),
+                (float) Math.random(),
+                (float) Math.random()).RGB();
+
+        return color;
+    }
 }

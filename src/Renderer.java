@@ -18,6 +18,7 @@ public class Renderer {
         for (int row = 0; row < this.frameBuffer.height; row++) {
             for (int col = 0; col < this.frameBuffer.width; col++) {
                 this.frameBuffer.setPixelColor(row, col, color);
+                this.zBuffer.setPixelColor(row, col, color);
             }
         }
     }

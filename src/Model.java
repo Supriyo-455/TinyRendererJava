@@ -9,8 +9,9 @@ import java.util.List;
 import src.vec.Vec3f;
 
 public class Model {
-    List<List<Integer>> facets;
-    List<Vec3f> vertices;
+    public List<List<Integer>> facets;
+    public List<Vec3f> vertices;
+    public int nFaces, nVertices;
 
     public Model(String filename) {
         this.facets = new ArrayList<>();
@@ -41,19 +42,11 @@ public class Model {
                     this.facets.add(trianglePoints);
                 }
             }
+
+            this.nFaces = this.facets.size();
+            this.nVertices = this.vertices.size();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public Vec3f getVertex(int vertexIndex) {
-        // Vec3f vecf =
-        // float x = (vecf.x + 1.0f) * ((width - 1) / 2);
-        // float y = (vecf.y + 1.0f) * ((height - 1) / 2);
-        // float z = (vecf.z + 1.0f) * (255.0f / 2);
-
-        // Vec3i veci = new Vec3i((int) x, (int) y, (int) z);
-        // return veci;
-        return this.vertices.get(vertexIndex - 1);
     }
 }
