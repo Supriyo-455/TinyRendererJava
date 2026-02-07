@@ -12,6 +12,7 @@ public class Image {
     public int height;
     private BufferedImage image;
 
+    // TODO: Gray-scale image type not working need to check
     public static final int IMAGE_TYPE_INT_RGB = BufferedImage.TYPE_INT_RGB;
     public static final int IMAGE_TYPE_BYTE_GRAY = BufferedImage.TYPE_BYTE_GRAY;
 
@@ -25,6 +26,14 @@ public class Image {
         this.width = width;
         this.height = height;
         this.image = new BufferedImage(width, height, type);
+    }
+
+    public void fillColor(int color) {
+        for (int row = 0; row < this.height; row++) {
+            for (int col = 0; col < this.width; col++) {
+                this.setPixelColor(row, col, color);
+            }
+        }
     }
 
     public void setPixelColor(int x, int y, int color) {

@@ -6,6 +6,13 @@ public class Color {
     public int r, g, b;
     private int rgb;
 
+    public static final int RED = new Color(255, 0, 0).RGB();
+    public static final int BLACK = new Color(0, 0, 0).RGB();
+    public static final int GREEN = new Color(0, 255, 0).RGB();
+    public static final int BLUE = new Color(0, 0, 255).RGB();
+    public static final int WHITE = new Color(255, 255, 255).RGB();
+    public static final int YELLOW = new Color(255, 255, 0).RGB();
+
     public Color(int r, int g, int b) {
         this.r = r;
         this.g = g;
@@ -31,6 +38,11 @@ public class Color {
         int b = rgb & 0xFF;
 
         return new Color(r, g, b);
+    }
+
+    public static int intRGBToGray(int rgb) {
+        Color rgbColor = rgbToColor(rgb);
+        return (rgbColor.b + rgbColor.g + rgbColor.r) / 3;
     }
 
     // TODO: Use matrix operations for color?

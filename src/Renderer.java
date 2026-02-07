@@ -1,26 +1,23 @@
 package src;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
+import src.vec.Mat3f;
+import src.vec.Mat4f;
+import src.vec.Vec2f;
 import src.vec.Vec3f;
+import src.vec.Vec4f;
 
 // TODO: use only VecNf instead of VecNi := get rid of all integer value passing for coordinates and colors
 public class Renderer {
     private Image frameBuffer;
-    private Image zBuffer;
+    private float[] zBuffer;
 
-    public Renderer(Image frameBuffer, Image zBuffer) {
+    public Renderer(Image frameBuffer, float[] zBuffer) {
         this.frameBuffer = frameBuffer;
         this.zBuffer = zBuffer;
-    }
-
-    public void fillColor(int color) {
-        for (int row = 0; row < this.frameBuffer.height; row++) {
-            for (int col = 0; col < this.frameBuffer.width; col++) {
-                this.frameBuffer.setPixelColor(row, col, color);
-                this.zBuffer.setPixelColor(row, col, color);
-            }
-        }
+        Arrays.fill(zBuffer, Integer.MIN_VALUE);
     }
 
     // TODO: Reseach more on this topic.
@@ -64,7 +61,7 @@ public class Renderer {
         return 0.5f * ((b.y - a.y) * (b.x + a.x) + (c.y - b.y) * (c.x + b.x) + (a.y - c.y) * (a.x + c.x));
     }
 
-    public void drawTriangle(Vec3f a, Vec3f b, Vec3f c, int color) {
+    public void rasterize(Vec4f[] clipCoord, Mat4f viewPort, int color) {
         // // NOTE: Sort the vertices in ascending y order
         // if (a.y > b.y) {
         // Vector2D.swapVectors(a, b);
@@ -110,45 +107,65 @@ public class Renderer {
         // }
         // }
 
-        int ax = (int) a.x;
-        int bx = (int) b.x;
-        int cx = (int) c.x;
+        Vec4f[] ndc = new Vec4f[3];
+        for (int i = 0; i < 3; i++) {
+            ndc[i] = clipCoord[i].divideByScalar(clipCoord[i].w);
+        }
 
-        int ay = (int) a.y;
-        int by = (int) b.y;
-        int cy = (int) c.y;
+        Vec2f[] screenCoords = new Vec2f[3];
+        for (int i = 0; i < 3; i++) {
+            screenCoords[i] = viewPort.multiply(ndc[i]).swizzle(0, 1);
+        }
 
-        int az = (int) a.z;
-        int bz = (int) b.z;
-        int cz = (int) c.z;
+        Mat3f ABC = new Mat3f();
+        for (int i = 0; i < 3; i++) {
+            ABC.m[i][0] = screenCoords[i].x;
+            ABC.m[i][1] = screenCoords[i].y;
+            ABC.m[i][2] = 1;
+        }
 
-        int bbminx = (int) Math.min(Math.min(ax, bx), cx);
-        int bbminy = (int) Math.min(Math.min(ay, by), cy);
-        int bbmaxx = (int) Math.max(Math.max(ax, bx), cx);
-        int bbmaxy = (int) Math.max(Math.max(ay, by), cy);
-
-        float totalArea = this.areaOfTriangle(a, b, c);
+        float totalArea = ABC.determinant();
         // NOTE: backface culling + discarding triangles that cover less than a pixel
         if (totalArea < 1)
             return;
 
+        float bbminx = Math.min(screenCoords[0].x, Math.min(screenCoords[1].x, screenCoords[2].x));
+        float bbmaxx = Math.max(screenCoords[0].x, Math.max(screenCoords[1].x, screenCoords[2].x));
+
+        float bbminy = Math.min(screenCoords[0].y, Math.min(screenCoords[1].y, screenCoords[2].y));
+        float bbmaxy = Math.max(screenCoords[0].y, Math.max(screenCoords[1].y, screenCoords[2].y));
+
+        int width = this.frameBuffer.width;
+        int height = this.frameBuffer.height;
+
+        int xmin = Math.max((int) bbminx, 0);
+        int xmax = Math.min((int) bbmaxx, width - 1);
+        int ymin = Math.max((int) bbminy, 0);
+        int ymax = Math.min((int) bbmaxy, height - 1);
+
+        Mat3f invT = ABC.transpose().inverse();
+
         // NOTE: Parallelize outer loop over x
-        IntStream.rangeClosed(bbminx, bbmaxx).parallel().forEach(x -> {
-            for (int y = bbminy; y <= bbmaxy; y++) {
-                float alpha = this.areaOfTriangle(new Vec3f(x, y, 1), b, c) / totalArea;
-                float beta = this.areaOfTriangle(new Vec3f(x, y, 1), c, a) / totalArea;
-                float gamma = this.areaOfTriangle(new Vec3f(x, y, 1), a, b) / totalArea;
+        IntStream.rangeClosed(xmin, xmax).parallel().forEach(x -> {
+            for (int y = ymin; y <= ymax; y++) {
+
+                Vec3f bc = invT.multiply(new Vec3f(x, y, 1));
 
                 // NOTE: negative barycentric coordinate => the pixel is outside the triangle
-                if (alpha < 0 || beta < 0 || gamma < 0)
+                if (bc.x < 0 || bc.y < 0 || bc.z < 0)
                     continue;
 
-                // NOTE: Compute the depth of a pixel
-                int z = Color.interpolateThreeRGBvalues(az, bz, cz, alpha, beta, gamma);
-                if (z <= this.zBuffer.getPixelColor(x, y))
+                float z = bc.x * ndc[0].z +
+                        bc.y * ndc[1].z +
+                        bc.z * ndc[2].z;
+
+                int index = x + y * width;
+
+                // NOTE: Compute depth of a pixel
+                if (z <= this.zBuffer[index])
                     continue;
 
-                this.zBuffer.setPixelColor(x, y, z);
+                this.zBuffer[index] = z;
                 this.frameBuffer.setPixelColor(x, y, color);
             }
         });

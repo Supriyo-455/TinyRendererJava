@@ -82,42 +82,60 @@ public class Mat4f {
         return r;
     }
 
-    public static Mat4f perspective(float fovDeg, float aspect, float near, float far) {
-        float fovRad = (float) Math.toRadians(fovDeg);
-        float f = 1.0f / (float) Math.tan(fovRad / 2.0f);
-        Mat4f p = new Mat4f();
+    public static Mat4f perspective(float f) {
+        Mat4f p = identity();
 
-        p.m[0][0] = f / aspect;
-        p.m[1][1] = f;
-        p.m[2][2] = (far + near) / (near - far);
-        p.m[2][3] = (2 * far * near) / (near - far);
-        p.m[3][2] = -1.0f;
+        p.m[3][2] = -(1 / f);
 
         return p;
     }
 
-    public static Mat4f lookAt(Vec3f eye, Vec3f target, Vec3f up) {
-        Vec3f zAxis = eye.subtract(target).normalize(); // forward
-        Vec3f xAxis = up.cross(zAxis).normalize(); // right
-        Vec3f yAxis = zAxis.cross(xAxis); // true up
+    public static Mat4f viewport(int upperLeftX, int upperLeftY, int width, int height) {
+        Mat4f v = identity();
+        float w = (float) width / 2;
+        float h = (float) height / 2;
 
-        Mat4f view = identity();
+        v.m[0][0] = w;
+        v.m[1][1] = h;
+        v.m[0][3] = upperLeftX + w;
+        v.m[1][3] = upperLeftY + h;
 
-        view.m[0][0] = xAxis.x;
-        view.m[0][1] = xAxis.y;
-        view.m[0][2] = xAxis.z;
-        view.m[1][0] = yAxis.x;
-        view.m[1][1] = yAxis.y;
-        view.m[1][2] = yAxis.z;
-        view.m[2][0] = zAxis.x;
-        view.m[2][1] = zAxis.y;
-        view.m[2][2] = zAxis.z;
+        return v;
+    }
 
-        view.m[0][3] = -xAxis.dot(eye);
-        view.m[1][3] = -yAxis.dot(eye);
-        view.m[2][3] = -zAxis.dot(eye);
+    public static Mat4f lookAt(Vec3f eye, Vec3f center, Vec3f up) {
+        Mat4f M = identity();
+        Vec3f n = eye.subtract(center).normalize();
+        Vec3f l = up.cross(n).normalize();
+        Vec3f m = n.cross(l).normalize();
 
-        return view;
+        M.m[0][0] = l.x;
+        M.m[0][1] = l.y;
+        M.m[0][2] = l.z;
+        M.m[0][3] = 0;
+
+        M.m[1][0] = m.x;
+        M.m[1][1] = m.y;
+        M.m[1][2] = m.z;
+        M.m[1][3] = 0;
+
+        M.m[2][0] = n.x;
+        M.m[2][1] = n.y;
+        M.m[2][2] = n.z;
+        M.m[2][3] = 0;
+
+        M.m[3][0] = 0;
+        M.m[3][1] = 0;
+        M.m[3][2] = 0;
+        M.m[3][3] = 1;
+
+        Mat4f V = identity();
+
+        V.m[0][3] = -center.x;
+        V.m[1][3] = -center.y;
+        V.m[2][3] = -center.z;
+
+        return M.multiply(V);
     }
 
     @Override

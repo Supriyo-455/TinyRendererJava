@@ -14,6 +14,28 @@ public class Vec4f {
         this.w = w;
     }
 
+    private float get(int i) {
+        return switch (i) {
+            case 0 -> x;
+            case 1 -> y;
+            case 2 -> z;
+            case 3 -> w;
+            default -> throw new IllegalArgumentException("Index must be 0..3");
+        };
+    }
+
+    public Vec2f swizzle(int a, int b) {
+        return new Vec2f(get(a), get(b));
+    }
+
+    public Vec3f swizzle(int a, int b, int c) {
+        return new Vec3f(get(a), get(b), get(c));
+    }
+
+    public Vec4f swizzle(int a, int b, int c, int d) {
+        return new Vec4f(get(a), get(b), get(c), get(d));
+    }
+
     public Vec4f add(Vec4f v) {
         Vec4f result = new Vec4f();
         result.x = this.x + v.x;

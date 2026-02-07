@@ -75,23 +75,6 @@ public class Vec3f {
         this.y = temp;
     }
 
-    public Vec3f project(int width, int height) {
-        Vec3f res = new Vec3f(
-                (this.x + 1.0f) * ((width - 1) / 2.0f),
-                (this.y + 1.0f) * ((height - 1) / 2.0f),
-                (this.z + 1.0f) * ((255.0f) / 2.0f));
-
-        res.x = Math.clamp(res.x, 0, width - 1);
-        res.y = Math.clamp(res.y, 0, height - 1);
-        res.z = Math.clamp(res.z, 0, 255);
-
-        return res;
-    }
-
-    public Vec3f perspective(float c) {
-        return new Vec3f(this.x, this.y, this.z).divideByScalar((c - this.z) / c);
-    }
-
     @Override
     public String toString() {
         return String.format("(%.3f, %.3f, %.3f)", x, y, z);
