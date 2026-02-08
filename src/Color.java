@@ -20,9 +20,9 @@ public class Color {
     }
 
     public Color(float r, float g, float b) {
-        int R = (int) (r * 255.0f + 0.5f);
-        int G = (int) (g * 255.0f + 0.5f);
-        int B = (int) (b * 255.0f + 0.5f);
+        int R = (int) (r * 255.0f);
+        int G = (int) (g * 255.0f);
+        int B = (int) (b * 255.0f);
 
         this(R, G, B);
     }

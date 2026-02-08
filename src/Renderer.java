@@ -9,15 +9,79 @@ import src.vec.Vec2f;
 import src.vec.Vec3f;
 import src.vec.Vec4f;
 
-// TODO: use only VecNf instead of VecNi := get rid of all integer value passing for coordinates and colors
 public class Renderer {
     private Image frameBuffer;
     private float[] zBuffer;
 
+    public Renderer(Image frameBuffer) {
+        this.frameBuffer = frameBuffer;
+        this.zBuffer = new float[this.frameBuffer.height * this.frameBuffer.width];
+    }
+
     public Renderer(Image frameBuffer, float[] zBuffer) {
         this.frameBuffer = frameBuffer;
         this.zBuffer = zBuffer;
-        Arrays.fill(zBuffer, Integer.MIN_VALUE);
+    }
+
+    public void clearFrame() {
+        Arrays.fill(this.zBuffer, Float.NEGATIVE_INFINITY);
+        this.frameBuffer.fillColor(Color.BLACK);
+    }
+
+    public static Mat4f perspective(float f) {
+        Mat4f p = Mat4f.identity();
+
+        p.m[3][2] = -(1 / f);
+
+        return p;
+    }
+
+    public static Mat4f viewport(int upperLeftX, int upperLeftY, int width, int height) {
+        Mat4f v = Mat4f.identity();
+        float w = (float) width / 2;
+        float h = (float) height / 2;
+
+        v.m[0][0] = w;
+        v.m[1][1] = h;
+        v.m[0][3] = upperLeftX + w;
+        v.m[1][3] = upperLeftY + h;
+
+        return v;
+    }
+
+    public static Mat4f lookAt(Vec3f eye, Vec3f center, Vec3f up) {
+        Mat4f M = Mat4f.identity();
+        Vec3f n = eye.subtract(center).normalize();
+        Vec3f l = up.cross(n).normalize();
+        Vec3f m = n.cross(l).normalize();
+
+        M.m[0][0] = l.x;
+        M.m[0][1] = l.y;
+        M.m[0][2] = l.z;
+        M.m[0][3] = 0;
+
+        M.m[1][0] = m.x;
+        M.m[1][1] = m.y;
+        M.m[1][2] = m.z;
+        M.m[1][3] = 0;
+
+        M.m[2][0] = n.x;
+        M.m[2][1] = n.y;
+        M.m[2][2] = n.z;
+        M.m[2][3] = 0;
+
+        M.m[3][0] = 0;
+        M.m[3][1] = 0;
+        M.m[3][2] = 0;
+        M.m[3][3] = 1;
+
+        Mat4f V = Mat4f.identity();
+
+        V.m[0][3] = -center.x;
+        V.m[1][3] = -center.y;
+        V.m[2][3] = -center.z;
+
+        return M.multiply(V);
     }
 
     // TODO: Reseach more on this topic.
@@ -61,51 +125,7 @@ public class Renderer {
         return 0.5f * ((b.y - a.y) * (b.x + a.x) + (c.y - b.y) * (c.x + b.x) + (a.y - c.y) * (a.x + c.x));
     }
 
-    public void rasterize(Vec4f[] clipCoord, Mat4f viewPort, int color) {
-        // // NOTE: Sort the vertices in ascending y order
-        // if (a.y > b.y) {
-        // Vector2D.swapVectors(a, b);
-        // }
-        // if (a.y > c.y) {
-        // Vector2D.swapVectors(a, c);
-        // }
-        // if (b.y > c.y) {
-        // Vector2D.swapVectors(b, c);
-        // }
-
-        // int totalHeight = c.y - a.y;
-
-        // // NOTE: Check the triangle is not de-generate
-        // if (a.y != b.y) {
-        // int segment_height = b.y - a.y;
-        // for (int y = a.y; y <= b.y; y++) {
-        // int x1 = a.x + ((c.x - a.x) * (y - a.y)) / totalHeight;
-        // int x2 = a.x + ((b.x - a.x) * (y - a.y)) / segment_height;
-
-        // int maxX = x1 > x2 ? x1 : x2;
-        // int minX = x1 < x2 ? x1 : x2;
-
-        // for (int x = minX; x <= maxX; x++) {
-        // this.frameBuffer.setPixelColor(x, y, color);
-        // }
-        // }
-        // }
-
-        // // NOTE: Check the triangle is not de-generate
-        // if (c.y != b.y) {
-        // int segment_height = c.y - b.y;
-        // for (int y = b.y; y <= c.y; y++) {
-        // int x1 = a.x + ((c.x - a.x) * (y - a.y)) / totalHeight;
-        // int x2 = b.x + ((c.x - b.x) * (y - b.y)) / segment_height;
-
-        // int maxX = x1 > x2 ? x1 : x2;
-        // int minX = x1 < x2 ? x1 : x2;
-
-        // for (int x = minX; x <= maxX; x++) {
-        // this.frameBuffer.setPixelColor(x, y, color);
-        // }
-        // }
-        // }
+    public void rasterize(Vec4f[] clipCoord, Mat4f viewPort, Shader shader) {
 
         Vec4f[] ndc = new Vec4f[3];
         for (int i = 0; i < 3; i++) {
@@ -165,8 +185,12 @@ public class Renderer {
                 if (z <= this.zBuffer[index])
                     continue;
 
+                ShaderReturnType shaderReturn = shader.fragment(bc);
+                if (shaderReturn.discard)
+                    continue;
+
                 this.zBuffer[index] = z;
-                this.frameBuffer.setPixelColor(x, y, color);
+                this.frameBuffer.setPixelColor(x, y, shaderReturn.colorRGB);
             }
         });
     }

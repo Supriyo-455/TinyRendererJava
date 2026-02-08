@@ -1,5 +1,5 @@
 #!/bin/bash
-# ==== Compile all Java source files ====
+
 mkdir -p build
 
 javac -d build src/Main.java
@@ -8,5 +8,4 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-# ==== Run the program ====
 java -cp build src.Main

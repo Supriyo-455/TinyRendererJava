@@ -1,5 +1,5 @@
 @echo off
-rem ==== Compile all Java source files ====
+
 javac -d build src\Main.java
 
 if %errorlevel% neq 0 (
@@ -7,5 +7,8 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-rem ==== Run the program ====
+if not exist rendered (
+    mkdir rendered
+)
+
 java -cp build src.Main
