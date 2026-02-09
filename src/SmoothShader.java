@@ -1,11 +1,11 @@
 package src;
 
+import src.vec.Mat3f;
 import src.vec.Mat4f;
 import src.vec.Vec3f;
 import src.vec.Vec4f;
 
-class PhongShader implements Shader {
-
+public class SmoothShader implements Shader {
     private final Model model;
 
     private final Mat4f MV;
@@ -21,9 +21,12 @@ class PhongShader implements Shader {
     // NOTE: Triangle in eye coordinates
     private Vec3f[] tri;
 
-    PhongShader(final Model model, final Mat4f ModelView, final Mat4f Perspective, Vec3f cam) {
+    private Vec3f[] varyingNormal;
+
+    SmoothShader(final Model model, final Mat4f ModelView, final Mat4f Perspective, Vec3f cam) {
         this.model = model;
         this.tri = new Vec3f[3];
+        this.varyingNormal = new Vec3f[3];
         this.MV = ModelView;
         this.P = Perspective;
         this.cam = cam.normalize();
@@ -35,8 +38,12 @@ class PhongShader implements Shader {
                 .swizzle(0, 1, 2).normalize();
     }
 
-    public Vec3f computeNormal() {
-        return (this.tri[0].subtract(this.tri[1])).cross((this.tri[0].subtract(this.tri[2]))).normalize();
+    public Vec3f computeNormal(Vec3f bar) {
+        Vec3f n1 = this.varyingNormal[0].multiplyByScalar(bar.x);
+        Vec3f n2 = this.varyingNormal[1].multiplyByScalar(bar.y);
+        Vec3f n3 = this.varyingNormal[2].multiplyByScalar(bar.z);
+
+        return n1.add(n2).add(n3).normalize();
     }
 
     public void setLightDir(Vec3f l) {
@@ -49,7 +56,7 @@ class PhongShader implements Shader {
     public ShaderReturnType fragment(final Vec3f bar) {
         float ambient = 0.3f;
 
-        Vec3f normal = this.computeNormal();
+        Vec3f normal = this.computeNormal(bar);
 
         float dotNL = normal.dot(this.lightDir);
         // TODO: Is computing normal for each pixel required?
@@ -69,12 +76,18 @@ class PhongShader implements Shader {
 
     @Override
     public Vec4f vertex(final int face, final int vert, final Mat4f T) {
-        int vertexIndex = this.model.facetVertex.get(face).get(vert);
         int normalIndex = this.model.facetNormal.get(face).get(vert);
-        Vec3f v = this.model.vertices.get(vertexIndex - 1);
         Vec3f n = this.model.normals.get(normalIndex - 1);
+
+        int vertexIndex = this.model.facetVertex.get(face).get(vert);
+        Vec3f v = this.model.vertices.get(vertexIndex - 1);
+
         Vec4f gl_position = T.multiply(this.MV).multiply(new Vec4f(v.x, v.y, v.z, 1));
         tri[vert] = gl_position.swizzle(0, 1, 2);
+
+        Mat4f MVinvT = T.multiply(this.MV).transpose().inverse();
+        varyingNormal[vert] = MVinvT.multiply(new Vec4f(n.x, n.y, n.z, 1)).swizzle(0, 1, 2);
+
         return this.P.multiply(gl_position);
     }
 }

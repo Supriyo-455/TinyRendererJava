@@ -38,10 +38,13 @@ class RandomShader implements Shader {
 
     @Override
     public Vec4f vertex(final int face, final int vert, final Mat4f T) {
-        int vertexIndex = this.model.facets.get(face).get(vert);
+        int normalIndex = this.model.facetNormal.get(face).get(vert);
+
+        int vertexIndex = this.model.facetVertex.get(face).get(vert);
         Vec3f v = this.model.vertices.get(vertexIndex - 1);
-        Vec4f gl_position = this.MV.multiply(new Vec4f(v.x, v.y, v.z, 1));
-        tri[vert] = gl_position.swizzle(0, 1, 3);
+
+        Vec4f gl_position = T.multiply(this.MV).multiply(new Vec4f(v.x, v.y, v.z, 1));
+        tri[vert] = gl_position.swizzle(0, 1, 2);
         return this.P.multiply(gl_position);
     }
 }

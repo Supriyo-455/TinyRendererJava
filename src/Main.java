@@ -20,8 +20,8 @@ public class Main {
                 Renderer renderer = new Renderer(frameBuffer);
 
                 // Model model = new Model("models/diablo3_pose.obj");
-                // Model model = new Model("models/african_head.obj");
-                Model model = new Model("models/tsunade.obj");
+                Model model = new Model("models/african_head.obj");
+                // Model model = new Model("models/tsunade.obj");
 
                 Vec3f eye = new Vec3f(0, 0, 3);
                 Vec3f center = new Vec3f(0, 0, 0);
@@ -31,9 +31,9 @@ public class Main {
                 Mat4f P = Renderer.perspective(eye.subtract(center).magnitude());
                 Mat4f viewPort = Renderer.viewport(width / 16, height / 16, width * 7 / 8, height * 7 / 8);
 
-                Shader shader = new PhongShader(model, MV, P, eye);
+                Shader shader = new SmoothShader(model, MV, P, eye);
 
-                for (int frame = 0; frame < 150; ++frame) {
+                for (int frame = 0; frame < 500; ++frame) {
                         renderer.clearFrame();
 
                         float angle = 0.06f * frame;
@@ -48,7 +48,7 @@ public class Main {
                                 Vec4f[] clipCoords = new Vec4f[3];
                                 for (int j = 0; j < 3; j++) {
                                         Mat4f T = rotY;
-                                        T = T.multiply(Mat4f.scale(2.5f, 2.5f, 2.5f));
+                                        // T = T.multiply(Mat4f.scale(2.5f, 2.5f, 2.5f));
                                         Vec4f v = shader.vertex(i, j, T);
                                         clipCoords[j] = v;
                                 }
@@ -60,6 +60,7 @@ public class Main {
                                                 shader);
                         }
 
+                        // TODO: Can we do this on a seperate thread?
                         frameBuffer.flip(false, true);
                         frameBuffer.save(fileName);
                 }
