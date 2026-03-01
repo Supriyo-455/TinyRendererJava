@@ -6,13 +6,13 @@ import src.vec.Vec4f;
 
 class RandomShader implements Shader {
 
-    private final Model model;
-
     private final Mat4f MV;
 
     private final Mat4f P;
 
     private int colorRGB;
+
+    private Model model;
 
     // NOTE: Triangle in eye coordinates
     private Vec3f[] tri;
@@ -38,13 +38,16 @@ class RandomShader implements Shader {
 
     @Override
     public Vec4f vertex(final int face, final int vert, final Mat4f T) {
-        int normalIndex = this.model.facetNormal.get(face)[vert];
-
         int vertexIndex = this.model.facetVertex.get(face)[vert];
         Vec3f v = this.model.vertices.get(vertexIndex - 1);
 
         Vec4f gl_position = T.multiply(this.MV).multiply(new Vec4f(v.x, v.y, v.z, 1));
         tri[vert] = gl_position.swizzle(0, 1, 2);
         return this.P.multiply(gl_position);
+    }
+
+    @Override
+    public void setModel(Model model) {
+        this.model = model;
     }
 }

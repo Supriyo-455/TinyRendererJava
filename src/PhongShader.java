@@ -6,17 +6,17 @@ import src.vec.Vec4f;
 
 class PhongShader implements Shader {
 
-    private final Model model;
-
     private final Mat4f MV;
 
     private final Mat4f P;
 
+    private final float e = 32f;
+
+    private Model model;
+
     private Vec3f lightDir;
 
     private Vec3f cam;
-
-    private final float e = 32f;
 
     // NOTE: Triangle in eye coordinates
     private Vec3f[] tri;
@@ -70,11 +70,16 @@ class PhongShader implements Shader {
     @Override
     public Vec4f vertex(final int face, final int vert, final Mat4f T) {
         int vertexIndex = this.model.facetVertex.get(face)[vert];
-        int normalIndex = this.model.facetNormal.get(face)[vert];
         Vec3f v = this.model.vertices.get(vertexIndex - 1);
-        Vec3f n = this.model.normals.get(normalIndex - 1);
+
         Vec4f gl_position = T.multiply(this.MV).multiply(new Vec4f(v.x, v.y, v.z, 1));
         tri[vert] = gl_position.swizzle(0, 1, 2);
+
         return this.P.multiply(gl_position);
+    }
+
+    @Override
+    public void setModel(Model model) {
+        this.model = model;
     }
 }

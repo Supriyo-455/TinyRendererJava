@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import src.vec.Vec2f;
 import src.vec.Vec3f;
-import src.vec.Vec4f;
 
 public class Model {
     public List<int[]> facetVertex = new ArrayList<>();

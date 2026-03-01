@@ -1,22 +1,22 @@
 package src;
 
-import src.vec.Mat3f;
 import src.vec.Mat4f;
 import src.vec.Vec3f;
 import src.vec.Vec4f;
 
 public class SmoothShader implements Shader {
-    private final Model model;
 
     private final Mat4f MV;
 
     private final Mat4f P;
 
+    private final float e = 32f;
+
     private Vec3f lightDir;
 
     private Vec3f cam;
 
-    private final float e = 32f;
+    private Model model;
 
     // NOTE: Triangle in eye coordinates
     private Vec3f[] tri;
@@ -89,5 +89,10 @@ public class SmoothShader implements Shader {
         varyingNormal[vert] = MVinvT.multiply(new Vec4f(n.x, n.y, n.z, 1)).swizzle(0, 1, 2);
 
         return this.P.multiply(gl_position);
+    }
+
+    @Override
+    public void setModel(Model model) {
+        this.model = model;
     }
 }

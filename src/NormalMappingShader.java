@@ -6,7 +6,7 @@ import src.vec.Vec3f;
 import src.vec.Vec4f;
 
 public class NormalMappingShader implements Shader {
-    private final Model model;
+    private Model model;
 
     private Mat4f MV;
 
@@ -84,5 +84,10 @@ public class NormalMappingShader implements Shader {
         this.tri[vert] = gl_position.swizzle(0, 1, 2);
 
         return this.P.multiply(gl_position);
+    }
+
+    @Override
+    public void setModel(Model model) {
+        this.model = model;
     }
 }
