@@ -5,6 +5,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -38,10 +39,11 @@ public class Image {
         this.image = new BufferedImage(width, height, type);
     }
 
-    public boolean readTgaFile(String filename) {
+    public void readTgaFile(String filename) {
         File file = new File(filename);
-        if (!file.exists())
-            return false;
+        if (!file.exists()) {
+            throw new RuntimeException("File doesn't exist: " + filename);
+        }
 
         try (FileInputStream fis = new FileInputStream(file)) {
             byte[] header = new byte[18];
@@ -62,14 +64,12 @@ public class Image {
             int type = (bpp == 32) ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
             this.image = new BufferedImage(this.width, this.height, type);
 
-            boolean success;
             if (dataType == 2 || dataType == 3) {
-                success = loadRawData(fis, bytesPerPixel);
+                loadRawData(fis, bytesPerPixel);
             } else if (dataType == 10 || dataType == 11) {
-                success = loadRleData(fis, bytesPerPixel);
+                loadRleData(fis, bytesPerPixel);
             } else {
-                System.err.println("Unknown TGA format: " + dataType);
-                return false;
+                throw new RuntimeException("Unknown TGA format: " + dataType);
             }
 
             // NOTE: Handle TGA orientation (usually bottom-left, but check descriptor bit
@@ -77,14 +77,13 @@ public class Image {
             if ((descriptor & 0x20) == 0) {
                 this.flip(false, true); // NOTE: Flip vertically if origin is bottom
             }
-            return success;
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            // TODO: Auto-generated catch block
+            throw new RuntimeException("Failed to read TGA data: " + filename, e);
         }
     }
 
-    private boolean loadRawData(FileInputStream fis, int bytesPerPixel) throws IOException {
+    private void loadRawData(FileInputStream fis, int bytesPerPixel) throws Exception {
         int pixelCount = width * height;
         // TGA stores BGR or BGRA
         byte[] pixelBuffer = new byte[bytesPerPixel];
@@ -104,10 +103,9 @@ public class Image {
             // Correct Coordinate Mapping: i % width is X (col), i / width is Y (row)
             this.image.setRGB(i % width, i / width, argb);
         }
-        return true;
     }
 
-    private boolean loadRleData(FileInputStream fis, int bytesPerPixel) throws IOException {
+    private void loadRleData(FileInputStream fis, int bytesPerPixel) throws Exception {
         int pixelCount = width * height;
         int currentPixel = 0;
         byte[] colorBuffer = new byte[bytesPerPixel];
@@ -115,7 +113,7 @@ public class Image {
         while (currentPixel < pixelCount) {
             int chunkHeader = fis.read();
             if (chunkHeader == -1)
-                return false;
+                throw new RuntimeException("Chunk header is invalid");
 
             if (chunkHeader < 128) {
                 // Raw Chunk
@@ -133,7 +131,6 @@ public class Image {
                 }
             }
         }
-        return true;
     }
 
     private void setPixelFromBuffer(int pixelIdx, byte[] buffer, int bytesPerPixel) {

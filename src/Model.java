@@ -22,7 +22,7 @@ public class Model {
     public Image normalMap = new Image();
     public Image specularMap = new Image();
 
-    public Model(String filename) {
+    public Model(String filename) throws Exception {
         loadObj(filename);
         loadTexture(filename, "_diffuse.tga", diffuseMap);
         loadTexture(filename, "_nm.tga", normalMap);
@@ -80,7 +80,7 @@ public class Model {
         for (int i = 0; i < 3; i++) {
             String[] parts = words[i + 1].split("/");
 
-            // OBJ indices are 1-based, converting to 0-based
+            // NOTE: OBJ indices are 1-based, converting to 0-based
             vIdx[i] = Integer.parseInt(parts[0]);
 
             if (parts.length > 1 && !parts[1].isEmpty()) {
@@ -101,12 +101,8 @@ public class Model {
             return;
         String texFile = filename.substring(0, dot) + suffix;
 
-        try {
-            target.readTgaFile(texFile);
-            System.out.println("Texture loaded: " + texFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        target.readTgaFile(texFile);
+        System.out.println("Texture loaded: " + texFile);
     }
 
     public Vec2f uv(int iface, int nthvert) {
