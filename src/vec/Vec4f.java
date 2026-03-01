@@ -7,6 +7,13 @@ public class Vec4f {
     public Vec4f() {
     }
 
+    public Vec4f(Vec3f a, float w) {
+        this.x = a.x;
+        this.y = a.y;
+        this.z = a.z;
+        this.w = w;
+    }
+
     public Vec4f(float x, float y, float z, float w) {
         this.x = x;
         this.y = y;

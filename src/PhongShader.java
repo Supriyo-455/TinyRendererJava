@@ -69,8 +69,8 @@ class PhongShader implements Shader {
 
     @Override
     public Vec4f vertex(final int face, final int vert, final Mat4f T) {
-        int vertexIndex = this.model.facetVertex.get(face).get(vert);
-        int normalIndex = this.model.facetNormal.get(face).get(vert);
+        int vertexIndex = this.model.facetVertex.get(face)[vert];
+        int normalIndex = this.model.facetNormal.get(face)[vert];
         Vec3f v = this.model.vertices.get(vertexIndex - 1);
         Vec3f n = this.model.normals.get(normalIndex - 1);
         Vec4f gl_position = T.multiply(this.MV).multiply(new Vec4f(v.x, v.y, v.z, 1));

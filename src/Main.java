@@ -19,8 +19,8 @@ public class Main {
 
                 Renderer renderer = new Renderer(frameBuffer);
 
-                // Model model = new Model("models/diablo3_pose.obj");
-                Model model = new Model("models/african_head.obj");
+                Model model = new Model("models/diablo3_pose.obj");
+                // Model model = new Model("models/african_head.obj");
                 // Model model = new Model("models/tsunade.obj");
 
                 Vec3f eye = new Vec3f(0, 0, 3);
@@ -31,7 +31,7 @@ public class Main {
                 Mat4f P = Renderer.perspective(eye.subtract(center).magnitude());
                 Mat4f viewPort = Renderer.viewport(width / 16, height / 16, width * 7 / 8, height * 7 / 8);
 
-                Shader shader = new SmoothShader(model, MV, P, eye);
+                Shader shader = new NormalMappingShader(model, MV, P, eye);
 
                 for (int frame = 0; frame < 500; ++frame) {
                         renderer.clearFrame();
@@ -43,7 +43,7 @@ public class Main {
 
                         String fileName = String.format("rendered/output-%03d.png", frame);
 
-                        for (int i = 0; i < model.nFaces; i++) {
+                        for (int i = 0; i < model.nFaces(); i++) {
 
                                 Vec4f[] clipCoords = new Vec4f[3];
                                 for (int j = 0; j < 3; j++) {
